@@ -7,12 +7,12 @@ TOKEN = "7428205184:AAHKGl0ek2ZwMgZtz4WGO0sTJX6z927xvVM"
 # Главное меню
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("Составить меню", callback_data="menu")],
-        [InlineKeyboardButton("Составить список покупок по меню", callback_data="shopping_list")],
-        [InlineKeyboardButton("Книга рецептов по меню", callback_data="recipe_book")],
+        [InlineKeyboardButton("1. Составить меню", callback_data="menu")],
+        [InlineKeyboardButton("2. Составить список покупок по меню", callback_data="shopping_list")],
+        [InlineKeyboardButton("3. Книга рецептов по меню", callback_data="recipe_book")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Привет! Выбери, что ты хочешь от меню-конструктора (ткни в нужную кнопку)", reply_markup=reply_markup)
+    await update.message.reply_text("Привет! Выберите действие:", reply_markup=reply_markup)
 
 # Обработка нажатий в меню
 async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -21,13 +21,13 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "menu":
         keyboard = [
-            [InlineKeyboardButton("Составить рандомное меню (не хочу думать и выбирать)", callback_data="random_menu")],
-            [InlineKeyboardButton("Составить меню самостоятельно", callback_data="manual_menu")],
-            [InlineKeyboardButton("Посмотреть всё меню целиком", callback_data="view_menu")],
+            [InlineKeyboardButton("1.1. Составить рандомное меню", callback_data="random_menu")],
+            [InlineKeyboardButton("1.2. Составить меню самостоятельно", callback_data="manual_menu")],
+            [InlineKeyboardButton("1.3. Посмотреть всё меню", callback_data="view_menu")],
             [InlineKeyboardButton("Вернуться в главное меню", callback_data="main_menu")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("Чтобы составить меню, выбери из трёх вариантов, которые подойдут для тебя", reply_markup=reply_markup)
+        await query.edit_message_text("Выберите действие:", reply_markup=reply_markup)
 
     elif query.data == "random_menu":
         await query.edit_message_text("Функция для генерации случайного меню в разработке.")
@@ -46,12 +46,12 @@ async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == "view_menu":
         keyboard = [
-            [InlineKeyboardButton("Посмотреть меню по приему пищи", callback_data="menu_by_meal")],
-            [InlineKeyboardButton("Посмотреть всё меню целиком", callback_data="full_menu")],
+            [InlineKeyboardButton("1.3.1. Посмотреть меню по приему пищи", callback_data="menu_by_meal")],
+            [InlineKeyboardButton("1.3.2. Посмотреть меню целиком", callback_data="full_menu")],
             [InlineKeyboardButton("Вернуться в меню выбора", callback_data="menu")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text("Выбери тип меню", reply_markup=reply_markup)
+        await query.edit_message_text("Как вы хотите просмотреть меню?", reply_markup=reply_markup)
 
     elif query.data == "shopping_list":
         await query.edit_message_text("Функция для составления списка покупок в разработке.")
