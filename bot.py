@@ -2,6 +2,17 @@ import sqlite3
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
 
+import os
+import psycopg2
+
+# Получаем URL базы данных из переменной окружения
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Подключаемся к базе данных
+conn = psycopg2.connect(DATABASE_URL)
+cursor = conn.cursor()
+
+
 # Токен вашего бота
 TOKEN = "7428205184:AAHKGl0ek2ZwMgZtz4WGO0sTJX6z927xvVM"
 
