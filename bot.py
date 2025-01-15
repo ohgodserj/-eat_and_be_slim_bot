@@ -1,6 +1,7 @@
 import sqlite3
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, ConversationHandler
+from telegram.ext.filters import Filters
 
 import os
 import psycopg2
