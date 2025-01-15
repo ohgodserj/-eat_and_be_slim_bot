@@ -1,6 +1,75 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
+# Настройка подключения к базе данных в коде
+
+import psycopg2
+
+DATABASE_URL = "postgresql://eat_and_be_slim_db_user:RhQNjgwp1gLy5pgDKdla1ekWtcoy8xr2@dpg-cu3417hopnds7381ndq0-a/eat_and_be_slim_db"  # Замените на URL вашей базы данных
+
+# Установить подключение
+def connect_to_db():
+    try:
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        print("Успешное подключение к базе данных")
+        return conn
+    except Exception as e:
+        print(f"Ошибка подключения к базе данных: {e}")
+        return None
+
+# Создание таблицы для хранения данных о блюдах
+
+def create_table():
+    conn = connect_to_db()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS meals (
+                        id SERIAL PRIMARY KEY,
+                        meal_type VARCHAR(50),
+                        category VARCHAR(100),
+                        name VARCHAR(255),
+                        calories FLOAT,
+                        proteins FLOAT,
+                        fats FLOAT,
+                        carbs FLOAT,
+                        serving_weight FLOAT
+                    );
+                """)
+                conn.commit()
+                print("Таблица успешно создана или уже существует")
+        except Exception as e:
+            print(f"Ошибка при создании таблицы: {e}")
+        finally:
+            conn.close()
+
+
+#Загрузка данных в базу
+
+import pandas as pd
+
+def upload_data(file_path):
+    conn = connect_to_db()
+    if conn:
+        try:
+            data = pd.read_excel(file_path)
+            with conn.cursor() as cur:
+                for _, row in data.iterrows():
+                    cur.execute("""
+                        INSERT INTO meals (meal_type, category, name, calories, proteins, fats, carbs, serving_weight)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+                    """, (row['meal_type'], row['category'], row['name'], row['calories'],
+                          row['proteins'], row['fats'], row['carbs'], row['serving_weight']))
+                conn.commit()
+                print("Данные успешно загружены в базу")
+        except Exception as e:
+            print(f"Ошибка при загрузке данных: {e}")
+        finally:
+            conn.close()
+
+
+
 # Токен от BotFather
 TOKEN = "7428205184:AAHKGl0ek2ZwMgZtz4WGO0sTJX6z927xvVM"
 
