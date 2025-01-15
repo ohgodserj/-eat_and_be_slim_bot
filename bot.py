@@ -7,9 +7,9 @@ TOKEN = "7428205184:AAHKGl0ek2ZwMgZtz4WGO0sTJX6z927xvVM"
 # Главное меню
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("1. Составить меню", callback_data="menu")],
-        [InlineKeyboardButton("2. Составить список покупок по меню", callback_data="shopping_list")],
-        [InlineKeyboardButton("3. Книга рецептов по меню", callback_data="recipe_book")],
+        [InlineKeyboardButton("Составить меню", callback_data="menu")],
+        [InlineKeyboardButton("Составить список покупок по меню", callback_data="shopping_list")],
+        [InlineKeyboardButton("Книга рецептов по меню", callback_data="recipe_book")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text("Привет! Выберите действие:", reply_markup=reply_markup)
