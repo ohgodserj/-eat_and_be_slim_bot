@@ -1,186 +1,77 @@
-import sqlite3
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, ConversationHandler
-from telegram.ext.filters import Filters
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-import os
-import psycopg2
-
-# Получаем URL базы данных из переменной окружения
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Подключаемся к базе данных
-conn = psycopg2.connect(DATABASE_URL)
-cursor = conn.cursor()
-
-
-# Токен вашего бота
+# Токен от BotFather
 TOKEN = "7428205184:AAHKGl0ek2ZwMgZtz4WGO0sTJX6z927xvVM"
 
-# Этапы диалога
-CALORIES, PROTEINS, FATS, CARBS = range(4)
+# Главное меню
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("Составить меню", callback_data="menu")],
+        [InlineKeyboardButton("Составить список покупок по меню", callback_data="shopping_list")],
+        [InlineKeyboardButton("Книга рецептов по меню", callback_data="recipe_book")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Привет! Выбери, что ты хочешь от меню-конструктора (ткни в нужную кнопку)", reply_markup=reply_markup)
 
-# Функция инициализации базы данных
-def init_db():
-    conn = sqlite3.connect("nutrition.db")  # Подключение к базе данных
-    cursor = conn.cursor()
+# Обработка нажатий в меню
+async def menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
 
-    # Таблица для хранения данных пользователя
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_data (
-            user_id INTEGER PRIMARY KEY,
-            calories REAL,
-            proteins REAL,
-            fats REAL,
-            carbs REAL
-        )
-    """)
+    if query.data == "menu":
+        keyboard = [
+            [InlineKeyboardButton("Составить рандомное меню (не хочу думать и выбирать)", callback_data="random_menu")],
+            [InlineKeyboardButton("Составить меню самостоятельно", callback_data="manual_menu")],
+            [InlineKeyboardButton("Посмотреть всё меню целиком", callback_data="view_menu")],
+            [InlineKeyboardButton("Вернуться в главное меню", callback_data="main_menu")],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text("Чтобы составить меню, выбери из трёх вариантов, которые подойдут для тебя", reply_markup=reply_markup)
 
-    # Таблица с блюдами
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS meals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            meal_type TEXT,
-            category TEXT,
-            name TEXT,
-            calories REAL,
-            proteins REAL,
-            fats REAL,
-            carbs REAL,
-            serving_weight REAL
-        )
-    """)
-    conn.commit()
-    conn.close()
+    elif query.data == "random_menu":
+        await query.edit_message_text("Функция для генерации случайного меню в разработке.")
 
-# Начало диалога
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        "Привет! Чтобы начать, мне нужно узнать ваши потребности. "
-        "Сколько калорий вам нужно в день? (введите число)"
-    )
-    return CALORIES
+    elif query.data == "manual_menu":
+        keyboard = [
+            [InlineKeyboardButton("Завтрак", callback_data="breakfast")],
+            [InlineKeyboardButton("Обед", callback_data="lunch")],
+            [InlineKeyboardButton("Перекус", callback_data="snack")],
+            [InlineKeyboardButton("Ужин", callback_data="dinner")],
+            [InlineKeyboardButton("Десерт", callback_data="dessert")],
+            [InlineKeyboardButton("Вернуться в меню выбора", callback_data="menu")],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text("Выберите прием пищи:", reply_markup=reply_markup)
 
-# Сохранение калорий и переход к белкам
-def set_calories(update: Update, context: CallbackContext):
-    try:
-        context.user_data['calories'] = float(update.message.text)
-        update.message.reply_text("Сколько белков вам нужно в день? (в граммах)")
-        return PROTEINS
-    except ValueError:
-        update.message.reply_text("Пожалуйста, введите корректное число.")
-        return CALORIES
+    elif query.data == "view_menu":
+        keyboard = [
+            [InlineKeyboardButton("Посмотреть меню по приему пищи", callback_data="menu_by_meal")],
+            [InlineKeyboardButton("Посмотреть всё меню целиком", callback_data="full_menu")],
+            [InlineKeyboardButton("Вернуться в меню выбора", callback_data="menu")],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text("Выбери тип меню", reply_markup=reply_markup)
 
-# Сохранение белков и переход к жирам
-def set_proteins(update: Update, context: CallbackContext):
-    try:
-        context.user_data['proteins'] = float(update.message.text)
-        update.message.reply_text("Сколько жиров вам нужно в день? (в граммах)")
-        return FATS
-    except ValueError:
-        update.message.reply_text("Пожалуйста, введите корректное число.")
-        return PROTEINS
+    elif query.data == "shopping_list":
+        await query.edit_message_text("Функция для составления списка покупок в разработке.")
 
-# Сохранение жиров и переход к углеводам
-def set_fats(update: Update, context: CallbackContext):
-    try:
-        context.user_data['fats'] = float(update.message.text)
-        update.message.reply_text("Сколько углеводов вам нужно в день? (в граммах)")
-        return CARBS
-    except ValueError:
-        update.message.reply_text("Пожалуйста, введите корректное число.")
-        return FATS
+    elif query.data == "recipe_book":
+        await query.edit_message_text("Функция для создания книги рецептов в разработке.")
 
-# Сохранение углеводов и завершение диалога
-def set_carbs(update: Update, context: CallbackContext):
-    try:
-        context.user_data['carbs'] = float(update.message.text)
-
-        # Сохранение данных в базу
-        user_id = update.effective_user.id
-        conn = sqlite3.connect("nutrition.db")
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT OR REPLACE INTO user_data (user_id, calories, proteins, fats, carbs)
-            VALUES (?, ?, ?, ?, ?)
-        """, (user_id, context.user_data['calories'], context.user_data['proteins'], context.user_data['fats'], context.user_data['carbs']))
-        conn.commit()
-        conn.close()
-
-        update.message.reply_text(
-            "Спасибо! Ваши данные сохранены. Теперь я составлю для вас меню. "
-        )
-        return suggest_menu(update, context)
-    except ValueError:
-        update.message.reply_text("Пожалуйста, введите корректное число.")
-        return CARBS
-
-# Функция составления меню
-def suggest_menu(update: Update, context: CallbackContext):
-    user_id = update.effective_user.id
-    conn = sqlite3.connect("nutrition.db")
-    cursor = conn.cursor()
-
-    # Получение данных пользователя
-    cursor.execute("SELECT calories, proteins, fats, carbs FROM user_data WHERE user_id = ?", (user_id,))
-    user_data = cursor.fetchone()
-
-    if not user_data:
-        update.message.reply_text("Ваши данные не найдены. Пожалуйста, начните с команды /start.")
-        return ConversationHandler.END
-
-    # Подбор блюд
-    cursor.execute("""
-        SELECT name, serving_weight, calories, proteins, fats, carbs 
-        FROM meals
-        LIMIT 5
-    """)  # Условие подбора можно усложнить в зависимости от потребностей
-    meals = cursor.fetchall()
-
-    conn.close()
-
-    # Формирование ответа
-    if meals:
-        response = "Вот примерное меню для вас:\n"
-        for meal in meals:
-            response += (f"- {meal[0]}: {meal[1]} г, "
-                         f"{meal[2]} ккал, {meal[3]} г белков, {meal[4]} г жиров, {meal[5]} г углеводов\n")
-        update.message.reply_text(response)
-    else:
-        update.message.reply_text("В базе данных пока нет блюд для составления меню.")
-    
-    return ConversationHandler.END
-
-# Завершение диалога
-def cancel(update: Update, context: CallbackContext):
-    update.message.reply_text("Диалог отменен.")
-    return ConversationHandler.END
+    elif query.data == "main_menu":
+        await start(update, context)
 
 # Главный обработчик
 def main():
-    init_db()  # Инициализация базы данных
+    application = Application.builder().token(TOKEN).build()
 
-    updater = Updater(TOKEN)
-    dispatcher = updater.dispatcher
-
-    # Диалог для сбора данных пользователя
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
-        states={
-            CALORIES: [MessageHandler(Filters.text & ~Filters.command, set_calories)],
-            PROTEINS: [MessageHandler(Filters.text & ~Filters.command, set_proteins)],
-            FATS: [MessageHandler(Filters.text & ~Filters.command, set_fats)],
-            CARBS: [MessageHandler(Filters.text & ~Filters.command, set_carbs)],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-    )
-
-    dispatcher.add_handler(conv_handler)
+    # Обработчики команд
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(menu_handler))
 
     # Запуск бота
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
-# Основной блок
 if __name__ == "__main__":
     main()
